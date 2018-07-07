@@ -9,7 +9,7 @@
     >
 
     <ImageView
-        android:id="@+id/activity_main_iv_result"
+        android:id="@+id/activity_main_iv_canny"
         android:layout_width="121dp"
         android:layout_height="116dp"
         android:layout_marginBottom="8dp"
@@ -17,9 +17,24 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/activity_main_iv_hough"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <ImageView
+        android:id="@+id/activity_main_iv_hough"
+        android:layout_width="121dp"
+        android:layout_height="116dp"
+        android:layout_marginBottom="124dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         />
 </android.support.constraint.ConstraintLayout>
