@@ -6,17 +6,21 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 
-import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.MSER;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -31,20 +35,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageView ivCanny = findViewById(R.id.activity_main_iv_canny);
+        ImageView iv1 = findViewById(R.id.activity_main_iv_1);
+        ImageView iv2 = findViewById(R.id.activity_main_iv_2);
         try {
 
-            Bitmap bm = toBitmap(houghTransform(toGrayMode(loadDrawable(R.drawable.eye2))));
-            ivCanny.setImageBitmap(bm);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            /**
+             * img of one eye at least: 300x150 (~12KB)
+             */
+            Bitmap bm1 = toBitmap(houghTransform(toGrayMode(loadDrawable(R.drawable.eye1))));
+            iv1.setImageBitmap(bm1);
 
-        ImageView ivHough = findViewById(R.id.activity_main_iv_hough);
-        try {
+            Bitmap bm2 = toBitmap(houghTransform(toGrayMode(loadDrawable(R.drawable.eye2))));
+            iv2.setImageBitmap(bm2);
 
-            Bitmap bm = toBitmap(houghTransform(toGrayMode(loadDrawable(R.drawable.eye))));
-            ivHough.setImageBitmap(bm);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,22 +86,24 @@ public class MainActivity extends AppCompatActivity {
         Mat dst = gray.clone();
         Mat circles = new Mat();
         //morphology
-        Imgproc.morphologyEx(gray, gray, 4, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9)));
+        Imgproc.morphologyEx(gray, gray, 4, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
         //thresholding
-        Imgproc.threshold(gray, gray, 0, 255, Imgproc.THRESH_OTSU);
+        Imgproc.threshold(gray, gray, 0, 255, Imgproc.THRESH_TRIANGLE);
         //edge detection
-        Imgproc.Canny(gray, gray, 5, 100);
+//        Imgproc.Canny(gray, gray, 5, 100);
         //gaussian blur reduce noise
 //        Imgproc.GaussianBlur(gray, gray, new Size(3, 3), 2, 2);
-        //hough circle detection
-        // param1 = gradient value used to handle edge detection
-        // param2 = Accumulator threshold value for thecv2.CV_HOUGH_GRADIENT method.
-        // The smaller the threshold is, the more circles will bedetected (including false circles).
-        // The larger the threshold is, the more circles will potentially be returned.
-        double param1 = 5, param2 = 100;
-        // min and max radii (set these values as you desire)
-        int minRadius = 0, maxRadius = 100;
-        Imgproc.HoughCircles(gray, circles, Imgproc.CV_HOUGH_GRADIENT, 2.0, gray.rows() / 8, param1, param2, minRadius, maxRadius);
+        /** Hough circle detection
+         image: 8-bit, single channel image. If working with a color image, convert to grayscale first.
+         method: Defines the method to detect circles in images. Currently, the only implemented method is cv2.HOUGH_GRADIENT, which corresponds to the Yuen et al. paper.
+         dp: This parameter is the inverse ratio of the accumulator resolution to the image resolution (see Yuen et al. for more details). Essentially, the larger the dp gets, the smaller the accumulator array gets.
+         minDist: Minimum distance between the center (x, y) coordinates of detected circles. If the minDist is too small, multiple circles in the same neighborhood as the original may be (falsely) detected. If the minDist is too large, then some circles may not be detected at all.
+         param1: Gradient value used to handle edge detection in the Yuen et al. method.
+         param2: Accumulator threshold value for the cv2.HOUGH_GRADIENT method. The smaller the threshold is, the more circles will be detected (including false circles). The larger the threshold is, the more circles will potentially be returned.
+         minRadius: Minimum size of the radius (in pixels).
+         maxRadius: Maximum size of the radius (in pixels).
+         */
+        Imgproc.HoughCircles(gray, circles, Imgproc.CV_HOUGH_GRADIENT, 1, 400, 250, 15, 2, 80);
 
         //draw hough circle
         Log.e(TAG, "houghTransform: " + circles.size());
@@ -115,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // draw the found circle
                 Imgproc.circle(dst, pt, radius, new Scalar(255, 0, 0), iLineThickness);
-                Imgproc.circle(dst, pt, 3, new Scalar(255, 255, 0), iLineThickness);
+                Imgproc.circle(dst, pt, 3, new Scalar(255, 0, 0), iLineThickness);
             }
 
         return dst;
